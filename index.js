@@ -8,7 +8,7 @@ require("dotenv").config();
 const { PDFDocument, rgb } = require('pdf-lib');
 
 const corsOptions = {
-    origin: 'https://cardify-six.vercel.app/', // Replace with your frontend URL
+    origin: 'https://cardify-six.vercel.app', // Replace with your frontend URL
     optionsSuccessStatus: 200
   };
 
