@@ -29,45 +29,74 @@ app.post("/card/download/", async (req, res) => {
                                             .replace('##_DOB_##', new Date(req.body.birthdate).toLocaleDateString())
                                             .replace('##_Student_Image_##', req.body.studentPicture); // Replace with base64 image
   
-      const browser = await puppeteer.launch({
-        executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
-        args: ['--no-sandbox', "--disabled-setupid-sandbox", "--single-process", "--no-zygote"]
-      });
+      // const browser = await puppeteer.launch({
+      //   executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
+      //   args: ['--no-sandbox', "--disabled-setupid-sandbox", "--single-process", "--no-zygote"]
+      // });
   
-      const generatePDF = async (htmlContent, fileName) => {
+      // const generatePDF = async (htmlContent, fileName) => {
+      //   const page = await browser.newPage();
+      //   await page.setContent(htmlContent);
+      //   const pdfBuffer = await page.pdf({
+      //     format: 'A4',
+      //     landscape: true,
+      //     printBackground: true,
+      //   });
+      //   await page.close();
+      //   fs.writeFileSync(fileName, pdfBuffer);
+      //   return fileName;
+      // };
+  
+      // const pdfFile1 = await generatePDF(htmlTempData1, 'card1.pdf');
+      // const pdfFile2 = await generatePDF(htmlTempData2, 'card2.pdf');
+  
+      // // Merge PDF files using pdf-lib
+      // const mergedPdfBytes = await mergePDFs([pdfFile1, pdfFile2]);
+  
+      // // Write the merged PDF to a file or send it as a response
+      // fs.writeFileSync('merged.pdf', mergedPdfBytes);
+  
+      // res.setHeader('Content-Type', 'application/pdf');
+      // res.setHeader('Content-Disposition', `attachment; filename="merged.pdf"`);
+      // res.end(mergedPdfBytes, () => {
+      //       fs.unlink('./merged.pdf', (err) => {
+      //           if (err) {
+      //               console.error(`Error deleting PDF file: ${err}`);
+      //           } else {
+      //               console.log(`Deleted PDF file: merged.pdf`);
+      //           }
+      //       });
+      //   });
+
+      (async () => {
+        const browser = await puppeteer.launch({
+            executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
+            args: ['--no-sandbox',"--disabled-setupid-sandbox", "--single-process", "--no-zygote"]
+        });
         const page = await browser.newPage();
-        await page.setContent(htmlContent);
+        await page.setContent(htmlTempData2);
         const pdfBuffer = await page.pdf({
           format: 'A4',
           landscape: true,
           printBackground: true,
         });
-        await page.close();
-        fs.writeFileSync(fileName, pdfBuffer);
-        return fileName;
-      };
-  
-      const pdfFile1 = await generatePDF(htmlTempData1, 'card1.pdf');
-      const pdfFile2 = await generatePDF(htmlTempData2, 'card2.pdf');
-  
-      // Merge PDF files using pdf-lib
-      const mergedPdfBytes = await mergePDFs([pdfFile1, pdfFile2]);
-  
-      // Write the merged PDF to a file or send it as a response
-      fs.writeFileSync('merged.pdf', mergedPdfBytes);
-  
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="merged.pdf"`);
-      res.end(mergedPdfBytes, () => {
-            fs.unlink('./merged.pdf', (err) => {
+        await browser.close();
+        const pdfFileName = `card.pdf`;
+        const pdfPath = `${pdfFileName}`;
+        fs.writeFileSync(pdfPath, pdfBuffer);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${pdfFileName}"`);
+        res.end(pdfBuffer, () => {
+            fs.unlink(pdfPath, (err) => {
                 if (err) {
                     console.error(`Error deleting PDF file: ${err}`);
                 } else {
-                    console.log(`Deleted PDF file: merged.pdf`);
+                    console.log(`Deleted PDF file: ${pdfPath}`);
                 }
             });
         });
-  
+      })();
+
     } catch (e) {
       console.log("Error", e);
       res.status(500).json({ error: "An error occurred" });
